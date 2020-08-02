@@ -2,7 +2,7 @@ const socket = io();
 
 const EOF = 'EOF';
 
-const sendButton = document.getElementById('sendButton');
+const sendMessageForm = document.getElementById('sendMessageForm');
 const messageList = document.getElementById('messageList');
 const messageTextBox = document.getElementById('messageTextBox');
 const filePicker = document.getElementById('filePicker');
@@ -150,7 +150,8 @@ socket.on('candidate', async (data) => {
         peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
 })
 
-sendButton.addEventListener('click', (event) => {
+sendMessageForm.addEventListener('submit', (event) => {
+    event.preventDefault();
     const text = messageTextBox.value;
     if (text) {
         let message = {

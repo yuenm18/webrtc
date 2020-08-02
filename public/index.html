@@ -20,9 +20,11 @@
         <div id="messageList">
 
         </div>
-        <input id="messageTextBox" type="text"><button id="sendButton" disabled>Send</button>
-
-        <input id="filePicker" type="file">
+        <form id="sendMessageForm" autocomplete="off">
+          <input id="messageTextBox" type="text">
+          <button id="sendButton" disabled>Send</button>
+          <input id="filePicker" type="file">
+        </form>
     </aside>
 
     <script src="/socket.io/socket.io.js"></script>
