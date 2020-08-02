@@ -1,5 +1,7 @@
 const socket = io();
 
+const EOF = 'EOF';
+
 const sendButton = document.getElementById('sendButton');
 const messageList = document.getElementById('messageList');
 const messageTextBox = document.getElementById('messageTextBox');
@@ -63,11 +65,11 @@ function createMessageChannel(connection) {
     connection.addEventListener('datachannel', (event) => {
         if (event.channel.label === label) {
             event.channel.onmessage = (messageEvent) => {
-                writeMessage(messageEvent.data, 'Stranger');
+                writeMessage(JSON.parse(messageEvent.data), 'Stranger');
             }
         }
     });
-    
+
     return channel;
 }
 
@@ -80,11 +82,11 @@ function createFileChannel(connection) {
     connection.addEventListener('datachannel', (event) => {
         if (event.channel.label === label) {
             event.channel.onmessage = (messageEvent) => {
-                writeFile(messageEvent.data, 'Stranger');
+                writeFile(JSON.parse(messageEvent.data), 'Stranger');
             }
         }
     });
-    
+
     return channel;
 }
 
@@ -103,7 +105,7 @@ socket.on('joined', async (data) => {
     if (data.isCaller) {
         peerConnection = createRTCPeerConnection(localStream);
         messageChannel = createMessageChannel(peerConnection);
-        fileChannel = createFileChannel(peerConnection);
+        addAttachmentListener(peerConnection);
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
 
@@ -121,7 +123,7 @@ socket.on('offer', async (data) => {
     if (!isCaller) {
         peerConnection = createRTCPeerConnection(localStream);
         messageChannel = createMessageChannel(peerConnection);
-        fileChannel = createFileChannel(peerConnection);
+        addAttachmentListener(peerConnection);
         await peerConnection.setRemoteDescription(data.offer);
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
@@ -145,52 +147,115 @@ socket.on('answer', async (data) => {
 
 socket.on('candidate', async (data) => {
     if (peerConnection.currentRemoteDescription)
-    peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
 })
 
 sendButton.addEventListener('click', (event) => {
-    const message = messageTextBox.value;
-    if (message) {
-        messageChannel.send(message);
+    const text = messageTextBox.value;
+    if (text) {
+        let message = {
+            timestamp: new Date().getTime(),
+            message: text
+        };
+
+        const file = filePicker.files[0];
+        if (file) {
+            const attachmentId = `attachment-${new Date().getTime()}`;
+            message.attachment = {
+                id: attachmentId,
+                name: file.name,
+                mimeType: file.mimeType
+            };
+
+            sendFile(file, attachmentId, peerConnection);
+
+            filePicker.value = '';
+        }
+
+        messageChannel.send(JSON.stringify(message));
         writeMessage(message, 'You');
+        if (file) {
+            writeFile(file, message.attachment.id);
+        }
         messageTextBox.value = '';
     }
 });
 
-filePicker.addEventListener('change', async (event) => {
-    const file = filePicker.files[0];
-    if (file) {
-        fileChannel.send(await file.arrayBuffer());
-        writeFile(file, 'You');
-        filePicker.value='';
+function sendFile(file, fileId, connection) {
+    //https://levelup.gitconnected.com/send-files-over-a-data-channel-video-call-with-webrtc-step-6-d38f1ca5a351
+    const channel = connection.createDataChannel(fileId);
+    channel.binaryType = 'arraybuffer';
+    channel.onopen = async () => {
+        const maxSize = 2 ** 16 - 1;
+        const arrayBuffer = await file.arrayBuffer();
+        for (let i = 0; i < arrayBuffer.byteLength; i += maxSize) {
+            channel.send(arrayBuffer.slice(i, i + maxSize));
+        }
+        channel.send(EOF);
     }
-});
+
+}
+function addAttachmentListener(connection) {
+
+    connection.addEventListener('datachannel', (event) => {
+        const { channel } = event;
+        if (channel.label.startsWith('attachment-')) {
+            channel.binaryType = 'arraybuffer';
+
+            const receivedBuffers = [];
+            channel.onmessage = async (event) => {
+                const data = event.data;
+                try {
+                    if (data !== EOF) {
+                        receivedBuffers.push(data);
+                    } else {
+                        const arrayBuffer = receivedBuffers.reduce((accumulatedBuffer, arrayBuffer) => {
+                            const temp = new Uint8Array(accumulatedBuffer.byteLength + arrayBuffer.byteLength);
+                            temp.set(accumulatedBuffer);
+                            temp.set(new Uint8Array(arrayBuffer), accumulatedBuffer.byteLength);
+                            return temp;
+                        }, new Uint8Array());
+                        const blob = new Blob([arrayBuffer]);
+                        writeFile(blob, channel.label);
+                        channel.close();
+                    }
+                } catch (err) {
+                    console.log('File transfer failed', err);
+                }
+            }
+        }
+    });
+}
 
 function writeMessage(message, name) {
     var p = document.createElement('p');
     var strong = document.createElement('strong');
     strong.textContent = name + ': ';
-    var txtNode = document.createTextNode(message);
-    
+    var txtNode = document.createTextNode(message.message);
+    let div = document.createElement('div')
+    const em = document.createElement('em');
+    em.textContent = new Date(message.timestamp).toLocaleString();
+    div.appendChild(em);
+
     p.appendChild(strong);
     p.appendChild(txtNode);
+    if (message.attachment) {
+        let div = document.createElement('div')
+        var linkNode = document.createElement('a');
+        linkNode.id = message.attachment.id
+        linkNode.download = message.attachment.name;
+        linkNode.textContent = message.attachment.name;
+        div.appendChild(linkNode);
+        p.appendChild(div);
+    }
+    p.appendChild(div);
     messageList.appendChild(p);
 }
 
-function writeFile(file, name) {
-    
+function writeFile(file, id) {
+
     const blob = new Blob([file]);
     const url = URL.createObjectURL(blob);
-    
-    var p = document.createElement('p');
-    var strong = document.createElement('strong');
-    strong.textContent = name + ': ';
-    var linkNode = document.createElement('a');
-    linkNode.href = url;
-    linkNode.target = '_blank';
-    linkNode.textContent = 'File';
-    
-    p.appendChild(strong);
-    p.appendChild(linkNode);
-    messageList.appendChild(p);
+
+    document.getElementById(id).href = url;
 }
