@@ -39,62 +39,6 @@ let isCaller;
 let messageChannel;
 let fileChannel;
 
-function createRTCPeerConnection(stream) {
-    const connection = new RTCPeerConnection(configuration);
-    connection.onicecandidate = (event) => {
-        if (event.candidate) {
-            socket.emit('candidate', {
-                candidate: {
-                    sdpMLineIndex: event.candidate.sdpMLineIndex,
-                    candidate: event.candidate.candidate
-                },
-                roomNumber
-            })
-        }
-    }
-    connection.ontrack = (event) => {
-        remoteStream.srcObject = event.streams[0];
-    }
-    stream.getTracks().forEach(track => {
-        connection.addTrack(track, stream);
-    });
-
-    return connection;
-}
-
-function createMessageChannel(connection) {
-    const label = 'messageChannel';
-    const channel = connection.createDataChannel(label);
-    channel.onopen = () => sendButton.disabled = false;
-    channel.onclose = () => sendButton.disabled = true;
-    connection.addEventListener('datachannel', (event) => {
-        if (event.channel.label === label) {
-            event.channel.onmessage = (messageEvent) => {
-                writeMessage(JSON.parse(messageEvent.data), 'Stranger');
-            }
-        }
-    });
-
-    return channel;
-}
-
-function createFileChannel(connection) {
-    const label = 'fileChannel';
-    const channel = connection.createDataChannel(label);
-    channel.binaryType = 'arraybuffer';
-    channel.onopen = () => filePicker.disabled = false;
-    channel.onclose = () => filePicker.disabled = true;
-    connection.addEventListener('datachannel', (event) => {
-        if (event.channel.label === label) {
-            event.channel.onmessage = (messageEvent) => {
-                writeFile(JSON.parse(messageEvent.data), 'Stranger');
-            }
-        }
-    });
-
-    return channel;
-}
-
 socket.emit('join', roomNumber);
 
 socket.on('joined', async (data) => {
@@ -191,6 +135,63 @@ sendMessageForm.addEventListener('submit', (event) => {
         messageTextBox.value = '';
     }
 });
+
+function createRTCPeerConnection(stream) {
+    const connection = new RTCPeerConnection(configuration);
+    connection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit('candidate', {
+                candidate: {
+                    sdpMLineIndex: event.candidate.sdpMLineIndex,
+                    candidate: event.candidate.candidate
+                },
+                roomNumber
+            })
+        }
+    }
+    connection.ontrack = (event) => {
+        remoteStream.srcObject = event.streams[0];
+    }
+    stream.getTracks().forEach(track => {
+        connection.addTrack(track, stream);
+    });
+
+    return connection;
+}
+
+function createMessageChannel(connection) {
+    const label = 'messageChannel';
+    const channel = connection.createDataChannel(label);
+    channel.onopen = () => sendButton.disabled = false;
+    channel.onclose = () => sendButton.disabled = true;
+    connection.addEventListener('datachannel', (event) => {
+        if (event.channel.label === label) {
+            event.channel.onmessage = (messageEvent) => {
+                writeMessage(JSON.parse(messageEvent.data), 'Stranger');
+            }
+        }
+    });
+
+    return channel;
+}
+
+function createFileChannel(connection) {
+    const label = 'fileChannel';
+    const channel = connection.createDataChannel(label);
+    channel.binaryType = 'arraybuffer';
+    channel.onopen = () => filePicker.disabled = false;
+    channel.onclose = () => filePicker.disabled = true;
+    connection.addEventListener('datachannel', (event) => {
+        if (event.channel.label === label) {
+            event.channel.onmessage = (messageEvent) => {
+                writeFile(JSON.parse(messageEvent.data), 'Stranger');
+            }
+        }
+    });
+
+    return channel;
+}
+
 
 function sendFile(file, fileId, connection) {
     //https://levelup.gitconnected.com/send-files-over-a-data-channel-video-call-with-webrtc-step-6-d38f1ca5a351
