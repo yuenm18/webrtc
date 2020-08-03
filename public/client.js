@@ -98,7 +98,6 @@ function createFileChannel(connection) {
 socket.emit('join', roomNumber);
 
 socket.on('joined', async (data) => {
-    isCaller = data.isCaller;
     localStream = new MediaStream();
     try {
         localStream = await navigator.mediaDevices.getUserMedia(streamConstraints);
@@ -106,7 +105,7 @@ socket.on('joined', async (data) => {
     } catch (e) {
         console.error('Unable to get media stream', e);
     }
-
+    
     if (data.isCaller) {
         peerConnection = createRTCPeerConnection(localStream);
         messageChannel = createMessageChannel(peerConnection);
@@ -119,12 +118,17 @@ socket.on('joined', async (data) => {
                 type: offer.type,
                 sdp: offer.sdp
             },
-            roomNumber: data.roomNumber
+            roomNumber: data.roomNumber,
+            callerId: socket.id
         });
     }
 });
 
 socket.on('offer', async (data) => {
+    // define the caller after the offer is created so you don't get into the state
+    // where both users think they're the caller
+    isCaller = data.callerId === socket.id;
+
     if (!isCaller) {
         peerConnection = createRTCPeerConnection(localStream);
         messageChannel = createMessageChannel(peerConnection);
@@ -197,9 +201,9 @@ function sendFile(file, fileId, connection) {
         for (let i = 0; i < arrayBuffer.byteLength; i += MAX_MESSAGE_SIZE) {
             channel.send(arrayBuffer.slice(i, i + MAX_MESSAGE_SIZE));
         }
+
         channel.send(EOF);
     }
-
 }
 
 function addAttachmentListener(connection) {
@@ -221,6 +225,7 @@ function addAttachmentListener(connection) {
                             temp.set(new Uint8Array(arrayBuffer), accumulatedBuffer.byteLength);
                             return temp;
                         }, new Uint8Array());
+
                         const blob = new Blob([arrayBuffer]);
                         writeFile(blob, channel.label);
                         channel.close();
@@ -234,11 +239,11 @@ function addAttachmentListener(connection) {
 }
 
 function writeMessage(message, name) {
-    var p = document.createElement('p');
-    var strong = document.createElement('strong');
+    const p = document.createElement('p');
+    const strong = document.createElement('strong');
     strong.textContent = name + ': ';
-    var txtNode = document.createTextNode(message.message);
-    let div = document.createElement('div')
+    const txtNode = document.createTextNode(message.message);
+    const div = document.createElement('div')
     const em = document.createElement('em');
     em.textContent = new Date(message.timestamp).toLocaleString();
     div.appendChild(em);
@@ -246,8 +251,8 @@ function writeMessage(message, name) {
     p.appendChild(strong);
     p.appendChild(txtNode);
     if (message.attachment) {
-        let div = document.createElement('div')
-        var linkNode = document.createElement('a');
+        const div = document.createElement('div')
+        const linkNode = document.createElement('a');
         linkNode.id = message.attachment.id
         linkNode.download = message.attachment.name;
         linkNode.textContent = message.attachment.name;
