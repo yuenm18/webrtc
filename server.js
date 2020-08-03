@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
     socket.on('candidate', (data) => {
         console.log('candidate');
         io.to(data.roomNumber).emit('candidate', data);
-    })
+    });
 });
 
 

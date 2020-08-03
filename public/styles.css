@@ -36,3 +36,9 @@ aside {
     overflow-y: auto;
     flex: 1;
 }
+
+#copyLink {
+    color: white;
+    position: absolute;
+    bottom: 16px;
+}

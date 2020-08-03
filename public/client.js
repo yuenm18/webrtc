@@ -1,11 +1,14 @@
 const socket = io();
 
+const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
 const EOF = 'EOF';
 
 const sendMessageForm = document.getElementById('sendMessageForm');
 const messageList = document.getElementById('messageList');
 const messageTextBox = document.getElementById('messageTextBox');
 const filePicker = document.getElementById('filePicker');
+const remoteStream = document.getElementById('remoteStream');
+const copyLink = document.getElementById('copyLink');
 
 const streamConstraints = { video: true, audio: true };
 
@@ -28,6 +31,8 @@ if (roomNumber == null) {
     location = `?room=${newRoomNumber}`;
 }
 
+copyLink.href = location.href;
+
 let peerConnection;
 let localStream;
 let isCaller;
@@ -48,7 +53,7 @@ function createRTCPeerConnection(stream) {
         }
     }
     connection.ontrack = (event) => {
-        document.getElementById('remoteStream').srcObject = event.streams[0];
+        remoteStream.srcObject = event.streams[0];
     }
     stream.getTracks().forEach(track => {
         connection.addTrack(track, stream);
@@ -148,7 +153,7 @@ socket.on('answer', async (data) => {
 socket.on('candidate', async (data) => {
     if (peerConnection.currentRemoteDescription)
         peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-})
+});
 
 sendMessageForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -178,6 +183,7 @@ sendMessageForm.addEventListener('submit', (event) => {
         if (file) {
             writeFile(file, message.attachment.id);
         }
+
         messageTextBox.value = '';
     }
 });
@@ -187,17 +193,16 @@ function sendFile(file, fileId, connection) {
     const channel = connection.createDataChannel(fileId);
     channel.binaryType = 'arraybuffer';
     channel.onopen = async () => {
-        const maxSize = 2 ** 16 - 1;
         const arrayBuffer = await file.arrayBuffer();
-        for (let i = 0; i < arrayBuffer.byteLength; i += maxSize) {
-            channel.send(arrayBuffer.slice(i, i + maxSize));
+        for (let i = 0; i < arrayBuffer.byteLength; i += MAX_MESSAGE_SIZE) {
+            channel.send(arrayBuffer.slice(i, i + MAX_MESSAGE_SIZE));
         }
         channel.send(EOF);
     }
 
 }
-function addAttachmentListener(connection) {
 
+function addAttachmentListener(connection) {
     connection.addEventListener('datachannel', (event) => {
         const { channel } = event;
         if (channel.label.startsWith('attachment-')) {
@@ -249,12 +254,12 @@ function writeMessage(message, name) {
         div.appendChild(linkNode);
         p.appendChild(div);
     }
+
     p.appendChild(div);
     messageList.appendChild(p);
 }
 
 function writeFile(file, id) {
-
     const blob = new Blob([file]);
     const url = URL.createObjectURL(blob);
 
