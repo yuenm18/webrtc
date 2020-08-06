@@ -3,7 +3,7 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
-app.use(express.static('public'))
+app.use(express.static('build'))
 
 io.on('connection', (socket) => {
     socket.on('join', (roomNumber) => {
@@ -39,4 +39,4 @@ io.on('connection', (socket) => {
 });
 
 
-server.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 3001);

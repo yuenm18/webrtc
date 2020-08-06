@@ -1,0 +1,22 @@
+#localStream {
+  position: fixed;
+  left: 8px;
+  top: 8px;
+  height: 10%;
+  width: 10%
+}
+
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 16px);
+  background-color: white;
+  padding: 8px;
+  max-width: 400px;
+}
+
+#messageList {
+  overflow-y: auto;
+  flex: 1;
+}
