@@ -1,26 +1,32 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
+import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
 import './Chat.css';
+import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
+import AttachFileIcon from '@material-ui/icons/AttachFile';
 
 const EOF = 'EOF';
 const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
+
 export default function Chat(props) {
   const [text, setText] = useState('');
   const [file, setFile] = useState();
   const [messages, setMessages] = useState([]);
   const fileInputRef = useRef();
   const messageChannelRef = useRef();
-  const [sendButtonDisabled, setSendButtonDisabled] = useState(true);
+  const [sendDisabled, setSendDisabled] = useState(true);
   const peerConnection = props.connection;
+
   useEffect(() => {
     const peerConnection = props.connection;
     if (!peerConnection) return;
     function createMessageChannel(connection) {
       const label = 'messageChannel';
       const channel = connection.createDataChannel(label);
-      channel.onopen = () => setSendButtonDisabled(false);
-      channel.onclose = () => setSendButtonDisabled(true);
+      channel.onopen = () => setSendDisabled(false);
+      channel.onclose = () => setSendDisabled(true);
       connection.addEventListener('datachannel', (event) => {
         if (event.channel.label === label) {
           event.channel.onmessage = (messageEvent) => {
@@ -125,7 +131,7 @@ export default function Chat(props) {
     const blob = new Blob([file]);
     const url = URL.createObjectURL(blob);
 
-    setMessages(messages => 
+    setMessages(messages =>
       messages.map(m => {
         if (m.attachment?.id === id) {
           return {
@@ -143,33 +149,47 @@ export default function Chat(props) {
   }
   return (
     <div className="chat">
-      <h1>Chat</h1>
-      <div id="messageList">
+      <CloseOutlinedIcon className="close-icon" onClick={() => props.onClose()} />
+      <Typography variant="h4" component="h2">Chat</Typography>
+      <div className="message-list">
         {
-          messages.map(m =>
-            <div key={m.timestamp}>
-              <strong>{m.name}: </strong> {m.message}
-              {
-                m.attachment &&
-                <div>
-                  <a href={m.attachment.url} download={m.attachment.name}>
-                    {/* <img src={m.attachment.url} alt={m.attachment.name} /> */}
-                    {m.attachment.name}
-                  </a>
-                </div>
-              }
-              <div>
-                <em>{new Date(m.timestamp).toLocaleString()}</em>
-              </div>
-            </div>
-          )
+          messages.map(m => <Message key={m.timestamp} message={m} />)
         }
       </div>
       <form id="sendMessageForm" autoComplete="off" onSubmit={onSubmitHandler}>
+        <input id="file-picker" type="file" onChange={(event) => setFile(event.target.files[0])} ref={fileInputRef} disabled={sendDisabled} />
+        <label htmlFor="file-picker">
+          <IconButton color="secondary" aria-label="upload file" component="span" disabled={sendDisabled}>
+            <AttachFileIcon />
+          </IconButton>
+        </label>
         <TextField id="messageTextBox" label="Message" value={text} onChange={(event) => setText(event.target.value)} />
-        <Button id="sendButton" variant="contained" color="primary" type="submit" disabled={sendButtonDisabled}>Send</Button>
-        <input id="filePicker" type="file" onChange={(event) => setFile(event.target.files[0])} ref={fileInputRef} />
+        <Button id="sendButton" variant="contained" color="primary" type="submit" disabled={sendDisabled}>Send</Button>
+        <div className="file-name-container">
+          <small className="file-name">{file?.name}</small>
+        </div>
       </form>
+    </div>
+  );
+}
+
+function Message(props) {
+  const message = props.message;
+  return (
+    <div>
+      <strong>{message.name}: </strong> {message.message}
+      {
+        message.attachment &&
+        <div>
+          <a href={message.attachment.url} download={message.attachment.name}>
+            {/* <img src={message.attachment.url} alt={message.attachment.name} /> */}
+            {message.attachment.name}
+          </a>
+        </div>
+      }
+      <div>
+        <em>{new Date(message.timestamp).toLocaleString()}</em>
+      </div>
     </div>
   );
 }

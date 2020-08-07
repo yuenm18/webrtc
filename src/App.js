@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useRef  } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import ChatOutlinedIcon from '@material-ui/icons/ChatOutlined';
+import Fab from '@material-ui/core/Fab';
 import Video from './Video/Video';
 import Chat from './Chat/Chat';
 import './App.css';
@@ -9,6 +11,7 @@ function App(props) {
   let peerConnection = useRef();
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [showChat, setShowChat] = useState(true);
 
   useEffect(() => {
     const socket = io();
@@ -24,7 +27,7 @@ function App(props) {
       ],
       iceCandidatePoolSize: 10,
     };
-    
+
     let isCaller;
     let localStream;
 
@@ -119,7 +122,17 @@ function App(props) {
   return (
     <div className="App">
       <Video localStream={localStream} remoteStream={remoteStream} />
-      <Chat connection={peerConnection.current} />
+      <div className={!showChat ? 'hidden' : ''}>
+
+        <Chat connection={peerConnection.current} onClose={() => setShowChat(false)} />
+      </div>
+      {!showChat &&
+        <div className="open-chat">
+          <Fab>
+            <ChatOutlinedIcon onClick={() => setShowChat(true)} />
+          </Fab>
+        </div>
+      }
     </div>
   );
 }

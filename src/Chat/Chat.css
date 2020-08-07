@@ -14,9 +14,36 @@
   background-color: white;
   padding: 8px;
   max-width: 400px;
+  box-shadow: black 1px 0 10px;
+  position: relative;
 }
 
-#messageList {
+.message-list {
   overflow-y: auto;
   flex: 1;
+}
+
+.close-icon {
+  margin: 8px;
+  cursor: pointer;
+  right: 0;
+  position: absolute;
+}
+
+#file-picker {
+  display: none;
+}
+
+.file-name {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.file-name-container {
+  position: relative;
+  height: 10px;
 }

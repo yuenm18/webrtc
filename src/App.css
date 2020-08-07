@@ -2,3 +2,12 @@
   height: 100vh;
   display: flex;
 }
+
+.open-chat {
+  position: absolute;
+  right: 0;
+}
+
+.hidden {
+  display: none;
+}
