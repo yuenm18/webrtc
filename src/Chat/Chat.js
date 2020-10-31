@@ -6,6 +6,7 @@ import './Chat.css';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
+import Message from './Message/Message';
 
 const EOF = 'EOF';
 const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
@@ -100,6 +101,7 @@ export default function Chat(props) {
       writeMessage(message, 'You');
       if (file) {
         writeFile(file, message.attachment.id);
+        setFile('');
       }
 
       setText('');
@@ -169,27 +171,6 @@ export default function Chat(props) {
           <small className="file-name">{file?.name}</small>
         </div>
       </form>
-    </div>
-  );
-}
-
-function Message(props) {
-  const message = props.message;
-  return (
-    <div>
-      <strong>{message.name}: </strong> {message.message}
-      {
-        message.attachment &&
-        <div>
-          <a href={message.attachment.url} download={message.attachment.name}>
-            {/* <img src={message.attachment.url} alt={message.attachment.name} /> */}
-            {message.attachment.name}
-          </a>
-        </div>
-      }
-      <div>
-        <em>{new Date(message.timestamp).toLocaleString()}</em>
-      </div>
     </div>
   );
 }
