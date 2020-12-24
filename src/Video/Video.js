@@ -6,12 +6,14 @@ export default function Video(props) {
     if (video) {
       video.srcObject = props.localStream;
     }
-  }
+  };
+
   const setRemoteStream = (video) => {
     if (video) {
       video.srcObject = props.remoteStream;
     }
-  }
+  };
+
   return (
     <div className="video">
       <video className="local-stream" autoPlay playsInline muted={true} ref={setLocalStream}></video>

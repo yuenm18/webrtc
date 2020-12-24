@@ -16,7 +16,6 @@ export default function Message(props) {
   );
 }
 
-
 const Attachment = (props) => {
   const [isImage, setIsImage] = useState(true);
   const setNotImage = () => setIsImage(false);

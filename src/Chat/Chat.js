@@ -8,6 +8,7 @@ import IconButton from '@material-ui/core/IconButton';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
 import Message from './Message/Message';
 
+const ATTACHMENT_CHANNEL_PREFIX = 'attachment-';
 const EOF = 'EOF';
 const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
 
@@ -15,14 +16,14 @@ export default function Chat(props) {
   const [text, setText] = useState('');
   const [file, setFile] = useState();
   const [messages, setMessages] = useState([]);
+  const [sendDisabled, setSendDisabled] = useState(true);
   const fileInputRef = useRef();
   const messageChannelRef = useRef();
-  const [sendDisabled, setSendDisabled] = useState(true);
   const peerConnection = props.connection;
 
   useEffect(() => {
-    const peerConnection = props.connection;
     if (!peerConnection) return;
+
     function createMessageChannel(connection) {
       const label = 'messageChannel';
       const channel = connection.createDataChannel(label);
@@ -42,7 +43,7 @@ export default function Chat(props) {
     function addAttachmentListener(connection) {
       connection.addEventListener('datachannel', (event) => {
         const { channel } = event;
-        if (channel.label.startsWith('attachment-')) {
+        if (channel.label.startsWith(ATTACHMENT_CHANNEL_PREFIX)) {
           channel.binaryType = 'arraybuffer';
 
           const receivedBuffers = [];
@@ -73,38 +74,34 @@ export default function Chat(props) {
 
     messageChannelRef.current = createMessageChannel(peerConnection);
     addAttachmentListener(peerConnection);
-  }, [props.connection])
+  }, [peerConnection])
 
   const onSubmitHandler = (event) => {
     event.preventDefault();
 
-    if (text) {
-      let message = {
-        timestamp: new Date().getTime(),
-        message: text
+    let message = {
+      timestamp: new Date().getTime(),
+      message: text
+    };
+
+    if (file) {
+      message.attachment = {
+        id: `${ATTACHMENT_CHANNEL_PREFIX}${new Date().getTime()}`,
+        name: file.name,
+        mimeType: file.mimeType
       };
+    }
 
-      if (file) {
-        const attachmentId = `attachment-${new Date().getTime()}`;
-        message.attachment = {
-          id: attachmentId,
-          name: file.name,
-          mimeType: file.mimeType
-        };
+    messageChannelRef.current.send(JSON.stringify(message));
+    writeMessage(message, 'You');
+    setText('');
 
-        sendFile(file, attachmentId, peerConnection);
+    if (file) {
+      sendFile(file, message.attachment.id, peerConnection);
+      writeFile(file, message.attachment.id);
 
-        fileInputRef.current.value = '';
-      }
-
-      messageChannelRef.current.send(JSON.stringify(message));
-      writeMessage(message, 'You');
-      if (file) {
-        writeFile(file, message.attachment.id);
-        setFile('');
-      }
-
-      setText('');
+      fileInputRef.current.value = '';
+      setFile('');
     }
   };
 
@@ -134,21 +131,22 @@ export default function Chat(props) {
     const url = URL.createObjectURL(blob);
 
     setMessages(messages =>
-      messages.map(m => {
-        if (m.attachment?.id === id) {
+      messages.map(message => {
+        if (message.attachment?.id === id) {
           return {
-            ...m,
+            ...message,
             attachment: {
-              ...m.attachment,
+              ...message.attachment,
               url
             }
           }
         }
 
-        return m;
+        return message;
       })
     );
   }
+
   return (
     <div className="chat">
       <CloseOutlinedIcon className="close-icon" onClick={() => props.onClose()} />
