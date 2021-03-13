@@ -12,6 +12,7 @@ function App(props) {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [showChat, setShowChat] = useState(true);
+  const [isFull, setIsFull] = useState(false);
 
   useEffect(() => {
     const socket = io();
@@ -91,6 +92,10 @@ function App(props) {
         peerConnection.current.addIceCandidate(data.candidate);
     });
 
+    socket.on('full', () => {
+      setIsFull(true);
+    });
+
     function createRTCPeerConnection(stream) {
       const connection = new RTCPeerConnection(configuration);
       connection.createDataChannel('');
@@ -132,6 +137,12 @@ function App(props) {
             <ChatOutlinedIcon onClick={() => setShowChat(true)} />
           </Fab>
         </div>
+      }
+      {
+        isFull &&
+        <section class="banner">
+          <h1 class="full-banner">Room #{props.roomNumber} is full</h1>
+        </section>
       }
     </div>
   );

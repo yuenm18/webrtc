@@ -7,7 +7,7 @@ import * as serviceWorker from './serviceWorker';
 
 const roomNumber = new URLSearchParams(window.location.search).get("room");
 if (roomNumber == null) {
-    const newRoomNumber = crypto.getRandomValues(new Uint8Array(16))
+    const newRoomNumber = crypto.getRandomValues(new Uint8Array(8))
         .join('');
     window.location = `?room=${newRoomNumber}`;
 }
