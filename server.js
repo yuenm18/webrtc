@@ -7,8 +7,9 @@ app.use(express.static('build'))
 
 io.on('connection', (socket) => {
     socket.on('join', (roomNumber) => {
-        const room = io.nsps['/'].adapter.rooms[roomNumber];
-        const numberOfClientsInRoom = room && room.length;
+        const room = io.of('/').adapter.rooms.get(roomNumber);
+        console.log(room);
+        const numberOfClientsInRoom = (room && room.size) || 0;
         if (numberOfClientsInRoom > 1) {
             socket.emit('full');
             return;

@@ -5,7 +5,7 @@ import Video from './Video/Video';
 import Chat from './Chat/Chat';
 import './App.css';
 
-import io from 'socket.io-client';
+import { io } from "socket.io-client";
 
 function App(props) {
   let peerConnection = useRef();
