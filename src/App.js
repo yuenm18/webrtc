@@ -32,7 +32,12 @@ function App(props) {
     let isCaller;
     let localStream;
 
-    socket.emit('join', props.roomNumber);
+    socket.on('connect', () => {
+      socket.emit('join', {
+        roomNumber: props.roomNumber,
+        clientId: socket.id
+      });
+    });
 
     socket.on('joined', async (data) => {
       localStream = new MediaStream();
@@ -54,7 +59,7 @@ function App(props) {
             sdp: offer.sdp
           },
           roomNumber: data.roomNumber,
-          callerId: socket.id
+          clientId: socket.id
         });
       }
     });
@@ -62,7 +67,7 @@ function App(props) {
     socket.on('offer', async (data) => {
       // define the caller after the offer is created so you don't get into the state
       // where both users think they're the caller
-      isCaller = data.callerId === socket.id;
+      isCaller = data.clientId === socket.id;
 
       if (!isCaller) {
         peerConnection.current = createRTCPeerConnection(localStream);
@@ -74,7 +79,8 @@ function App(props) {
             type: answer.type,
             sdp: answer.sdp
           },
-          roomNumber: data.roomNumber
+          roomNumber: data.roomNumber,
+          clientId: socket.id
         });
       }
     });
@@ -88,8 +94,9 @@ function App(props) {
     });
 
     socket.on('candidate', async (data) => {
-      if (peerConnection.current.currentRemoteDescription && data.clientId !== socket.id)
-        peerConnection.current.addIceCandidate(data.candidate);
+      if (peerConnection.current.currentRemoteDescription && data.clientId !== socket.id) {
+        await peerConnection.current.addIceCandidate(data.candidate);
+      }
     });
 
     socket.on('full', () => {
