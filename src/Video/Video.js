@@ -18,7 +18,7 @@ export default function Video(props) {
     <div className="video">
       <video className="local-stream" autoPlay playsInline muted={true} ref={setLocalStream}></video>
       <video autoPlay playsInline ref={setRemoteStream}></video>
-      <a className="copy-link" target="_blank" rel="noopener noreferrer" href={window.location.href}>Go to this link to join this chat</a>
+      {!props.remoteStream && <a className="copy-link" target="_blank" rel="noopener noreferrer" href={window.location.href}>Go to this link to join this chat</a>}
     </div>
   );
 }

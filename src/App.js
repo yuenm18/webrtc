@@ -107,6 +107,7 @@ function App(props) {
 
     function createRTCPeerConnection(stream) {
       const connection = new RTCPeerConnection(configuration);
+      connection.createDataChannel('');
       connection.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('candidate', {
