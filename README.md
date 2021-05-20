@@ -1,5 +1,7 @@
 # WebRTC Demo
 
+View demo [here](http://demo-webrtc.azurewebsites.net/)
+
 ## Local Development
 
 1. Run `npm install`

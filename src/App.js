@@ -94,8 +94,10 @@ function App(props) {
     });
 
     socket.on('candidate', async (data) => {
-      if (peerConnection.current.currentRemoteDescription && data.clientId !== socket.id) {
-        await peerConnection.current.addIceCandidate(data.candidate);
+      if (data.clientId !== socket.id) {
+        retryWhile(
+          () => peerConnection.current.currentRemoteDescription,
+          () => peerConnection.current.addIceCandidate(data.candidate));
       }
     });
 
@@ -105,7 +107,6 @@ function App(props) {
 
     function createRTCPeerConnection(stream) {
       const connection = new RTCPeerConnection(configuration);
-      connection.createDataChannel('');
       connection.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('candidate', {
@@ -153,6 +154,15 @@ function App(props) {
       }
     </div>
   );
+}
+
+function retryWhile(condition, func) {
+  if (condition()) {
+    func()
+  }
+  else {
+    setTimeout(() => retryWhile(condition, func), 1000);
+  }
 }
 
 export default App;
