@@ -1,6 +1,6 @@
 # WebRTC Demo
 
-View demo [here](http://demo-webrtc.azurewebsites.net/)
+View the demo [here](http://demo-webrtc.azurewebsites.net/)
 
 ## Local Development
 
