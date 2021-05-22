@@ -1,23 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
 import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
 import './Chat.css';
 import Typography from '@material-ui/core/Typography';
-import IconButton from '@material-ui/core/IconButton';
-import AttachFileIcon from '@material-ui/icons/AttachFile';
+import SendMessageForm from './SendMessageForm/SendMessageForm';
 import Message from './Message/Message';
 
-const ATTACHMENT_CHANNEL_PREFIX = 'attachment-';
+const ATTACHMENT_CHANNEL_PREFIX = 'attachment';
 const EOF = 'EOF';
 const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
 
 export default function Chat(props) {
-  const [text, setText] = useState('');
-  const [file, setFile] = useState();
   const [messages, setMessages] = useState([]);
   const [sendDisabled, setSendDisabled] = useState(true);
-  const fileInputRef = useRef();
   const messageChannelRef = useRef();
   const peerConnection = props.connection;
 
@@ -43,7 +37,7 @@ export default function Chat(props) {
     function addAttachmentListener(connection) {
       connection.addEventListener('datachannel', (event) => {
         const { channel } = event;
-        if (channel.label.startsWith(ATTACHMENT_CHANNEL_PREFIX)) {
+        if (isAttachmentChannel(channel)) {
           channel.binaryType = 'arraybuffer';
 
           const receivedBuffers = [];
@@ -61,7 +55,8 @@ export default function Chat(props) {
                 }, new Uint8Array());
 
                 const blob = new Blob([arrayBuffer]);
-                writeFile(blob, channel.label);
+                const parsedChannelLabel = parseAttachmentChannelLabel(channel.label);
+                writeFile(blob, parsedChannelLabel.messageId, parsedChannelLabel.fileId);
                 channel.close();
               }
             } catch (err) {
@@ -76,38 +71,18 @@ export default function Chat(props) {
     addAttachmentListener(peerConnection);
   }, [peerConnection])
 
-  const onSubmitHandler = (event) => {
-    event.preventDefault();
-
-    let message = {
-      timestamp: new Date().getTime(),
-      message: text
-    };
-
-    if (file) {
-      message.attachment = {
-        id: `${ATTACHMENT_CHANNEL_PREFIX}${new Date().getTime()}`,
-        name: file.name,
-        mimeType: file.mimeType
-      };
-    }
-
+  function onSubmitHandler(message) {
     messageChannelRef.current.send(JSON.stringify(message));
     writeMessage(message, 'You');
-    setText('');
-
-    if (file) {
-      sendFile(file, message.attachment.id, peerConnection);
-      writeFile(file, message.attachment.id);
-
-      fileInputRef.current.value = '';
-      setFile('');
+    for (let attachment of message.attachments) {
+      sendFile(attachment.file, message.id, attachment.id, peerConnection);
+      writeFile(attachment.file, message.id, attachment.id);
     }
   };
 
-  function sendFile(file, fileId, connection) {
+  function sendFile(file, messageId, fileId, connection) {
     //https://levelup.gitconnected.com/send-files-over-a-data-channel-video-call-with-webrtc-step-6-d38f1ca5a351
-    const channel = connection.createDataChannel(fileId);
+    const channel = connection.createDataChannel(buildAttachmentChannelLabel(messageId, fileId));
     channel.binaryType = 'arraybuffer';
     channel.onopen = async () => {
       const arrayBuffer = await file.arrayBuffer();
@@ -126,25 +101,25 @@ export default function Chat(props) {
     }]);
   }
 
-  function writeFile(file, id) {
+  function writeFile(file, messageId, fileId) {
     const blob = new Blob([file]);
     const url = URL.createObjectURL(blob);
 
-    setMessages(messages =>
-      messages.map(message => {
-        if (message.attachment?.id === id) {
-          return {
-            ...message,
-            attachment: {
-              ...message.attachment,
-              url
+    setMessages(messages => {
+      return messages.map(message => {
+        if (message?.id === messageId) {
+          message.attachments = message.attachments.map(attachment => {
+            if (attachment?.id === fileId) {
+              attachment.url = url;
             }
-          }
+
+            return attachment;
+          });
         }
 
         return message;
-      })
-    );
+      });
+    });
   }
 
   return (
@@ -156,19 +131,23 @@ export default function Chat(props) {
           messages.map(m => <Message key={m.timestamp} message={m} />)
         }
       </div>
-      <form id="sendMessageForm" autoComplete="off" onSubmit={onSubmitHandler}>
-        <input id="file-picker" type="file" onChange={(event) => setFile(event.target.files[0])} ref={fileInputRef} disabled={sendDisabled} />
-        <label htmlFor="file-picker">
-          <IconButton color="secondary" aria-label="upload file" component="span" disabled={sendDisabled}>
-            <AttachFileIcon />
-          </IconButton>
-        </label>
-        <TextField id="messageTextBox" label="Message" value={text} onChange={(event) => setText(event.target.value)} />
-        <Button id="sendButton" variant="contained" color="primary" type="submit" disabled={sendDisabled}>Send</Button>
-        <div className="file-name-container">
-          <small className="file-name">{file?.name}</small>
-        </div>
-      </form>
+      <SendMessageForm disabled={sendDisabled} onSubmit={onSubmitHandler} />
     </div>
   );
+}
+
+function parseAttachmentChannelLabel(channelLabel) {
+  const channelLabelParts = channelLabel.split(':');
+  return {
+    messageId: channelLabelParts[1],
+    fileId: channelLabelParts[2]
+  }
+}
+
+function buildAttachmentChannelLabel(messageId, fileId) {
+  return `${ATTACHMENT_CHANNEL_PREFIX}:${messageId}:${fileId}`;
+}
+
+function isAttachmentChannel(channel) {
+  return channel.label.startsWith(ATTACHMENT_CHANNEL_PREFIX)
 }

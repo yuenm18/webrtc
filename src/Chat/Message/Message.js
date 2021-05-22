@@ -7,7 +7,7 @@ export default function Message(props) {
     <div>
       <strong>{message.name}: </strong> {message.message}
       {
-        message.attachment && <Attachment attachment={message.attachment} />
+        message.attachments.map(attachment => <Attachment attachment={attachment} />)
       }
       <div>
         <em>{new Date(message.timestamp).toLocaleString()}</em>
