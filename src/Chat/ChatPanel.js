@@ -10,6 +10,7 @@ const EOF = 'EOF';
 const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
 
 const MessageList = styled.div`
+  margin-top: 10px;
   overflow-y: auto;
   flex: 1;
 `;
@@ -31,9 +32,11 @@ const ChatContainer = styled.div`
   max-width: 400px;
   box-shadow: black 1px 0 10px;
   position: relative;
+  width: 30vw;
 `;
 
-export default function Chat(props) {
+
+export default function ChatPanel(props) {
   const [messages, setMessages] = useState([]);
   const [sendDisabled, setSendDisabled] = useState(true);
   const messageChannelRef = useRef();

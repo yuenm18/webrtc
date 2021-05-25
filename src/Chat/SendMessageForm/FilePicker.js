@@ -3,9 +3,14 @@ import styled from 'styled-components';
 import IconButton from '@material-ui/core/IconButton';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
 
+const FilePickerContainer = styled.div`
+  display: inline-block;
+`;
+
 const FileInput = styled.input`
   display: none;
 `;
+
 const FileNameContainer = styled.div`
   position: relative;
   height: 10px;
@@ -31,7 +36,7 @@ export default function FilePicker(props) {
   }
 
   return (
-    <div>
+    <FilePickerContainer>
       <FileInput id="file-picker" type="file" multiple onChange={(event) => onChangeHandler(event.target.files)} ref={fileInputRef} disabled={sendDisabled} />
       <label htmlFor="file-picker">
         <IconButton color="secondary" aria-label="upload file" component="span" disabled={sendDisabled}>
@@ -41,6 +46,6 @@ export default function FilePicker(props) {
       <FileNameContainer>
         { files.map((file, index) => <FileName key={index}>{file?.name}</FileName>) }
       </FileNameContainer>
-    </div>
+    </FilePickerContainer>
   );
 }
