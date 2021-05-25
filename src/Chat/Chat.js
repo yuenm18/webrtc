@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import styled from 'styled-components';
 import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
-import './Chat.css';
 import Typography from '@material-ui/core/Typography';
 import SendMessageForm from './SendMessageForm/SendMessageForm';
 import Message from './Message/Message';
@@ -8,6 +8,30 @@ import Message from './Message/Message';
 const ATTACHMENT_CHANNEL_PREFIX = 'attachment';
 const EOF = 'EOF';
 const MAX_MESSAGE_SIZE = 2 ** 16 - 1;
+
+const MessageList = styled.div`
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const CloseIcon = styled(CloseOutlinedIcon)`
+  margin: 8px;
+  cursor: pointer;
+  right: 0;
+  position: absolute;
+`;
+
+const ChatContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 16px);
+  background-color: white;
+  padding: 8px;
+  max-width: 400px;
+  box-shadow: black 1px 0 10px;
+  position: relative;
+`;
 
 export default function Chat(props) {
   const [messages, setMessages] = useState([]);
@@ -123,16 +147,16 @@ export default function Chat(props) {
   }
 
   return (
-    <div className="chat">
-      <CloseOutlinedIcon className="close-icon" onClick={() => props.onClose()} />
+    <ChatContainer>
+      <CloseIcon onClick={() => props.onClose()} />
       <Typography variant="h4" component="h2">Chat</Typography>
-      <div className="message-list">
+      <MessageList>
         {
           messages.map(m => <Message key={m.timestamp} message={m} />)
         }
-      </div>
+      </MessageList>
       <SendMessageForm disabled={sendDisabled} onSubmit={onSubmitHandler} />
-    </div>
+    </ChatContainer>
   );
 }
 

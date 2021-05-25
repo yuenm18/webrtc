@@ -1,17 +1,35 @@
 import React, { useEffect, useState, useRef } from 'react';
-import ChatOutlinedIcon from '@material-ui/icons/ChatOutlined';
-import Fab from '@material-ui/core/Fab';
+import styled from 'styled-components';
+import ChatContainer from './Chat/ChatContainer';
 import Video from './Video/Video';
-import Chat from './Chat/Chat';
-import './App.css';
 
 import { io } from "socket.io-client";
+
+const AppContainer = styled.section`
+  height: 100vh;
+  display: flex;
+`;
+const BannerSection = styled.section`
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const FullRoomBanner = styled.h1`
+  color: red;
+`;
+
+
 
 function App(props) {
   let peerConnection = useRef();
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [showChat, setShowChat] = useState(true);
   const [isFull, setIsFull] = useState(false);
 
   useEffect(() => {
@@ -134,26 +152,16 @@ function App(props) {
   }, [props.roomNumber]);
 
   return (
-    <div className="App">
+    <AppContainer>
       <Video localStream={localStream} remoteStream={remoteStream} />
-      <div className={!showChat ? 'hidden' : ''}>
-
-        <Chat connection={peerConnection.current} onClose={() => setShowChat(false)} />
-      </div>
-      {!showChat &&
-        <div className="open-chat">
-          <Fab>
-            <ChatOutlinedIcon onClick={() => setShowChat(true)} />
-          </Fab>
-        </div>
-      }
+      <ChatContainer connection={peerConnection.current} />
       {
         isFull &&
-        <section class="banner">
-          <h1 class="full-banner">Room #{props.roomNumber} is full</h1>
-        </section>
+        <BannerSection>
+          <FullRoomBanner>Room #{props.roomNumber} is full</FullRoomBanner>
+        </BannerSection>
       }
-    </div>
+    </AppContainer>
   );
 }
 
