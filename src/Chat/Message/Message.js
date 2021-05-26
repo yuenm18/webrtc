@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 const MessageContainer = styled.div(props => ({
   'background-color': props.isMyMessage ? 'lightskyblue' : 'darkseagreen',
-  'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2)',
+  'box-shadow': '0 0 8px 2px rgba(0, 0, 0, 0.2)',
   'overflow-wrap': 'break-word',
   'border-radius': '10px',
   margin: '10px',

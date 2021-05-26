@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import styled from 'styled-components';
 import IconButton from '@material-ui/core/IconButton';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
+import CloseFileIcon from '@material-ui/icons/Close';
+import Badge from '@material-ui/core/Badge';
 
 const FilePickerContainer = styled.div`
   display: inline-block;
@@ -11,41 +13,65 @@ const FileInput = styled.input`
   display: none;
 `;
 
-const FileNameContainer = styled.div`
+const SelectedFilesContainer = styled.div`
   position: relative;
-  height: 10px;
+`;
+const SelectedFilesPopover = styled.div`
+  position: absolute;
+  bottom: 0;
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 10px;
+  box-shadow: -2px -2px 8px 2px rgba(0, 0, 0, 0.2);
 `;
 
 const FileName = styled.small`
-  position: absolute;
   display: block;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   max-width: 100%;
+  margin: 5px;
+`;
+
+const RemoveFiles = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  cursor: pointer;
 `;
 
 export default function FilePicker(props) {
   const fileInputRef = useRef();
-  const sendDisabled = props.sendDisabled;
-  const files = props.files;
+  const { files, disabled } = props;
 
   function onChangeHandler(selectedFiles) {
     props.onFilesSelected(files.concat(...selectedFiles));
     fileInputRef.current.value = '';
   }
 
+  function removeFilesHandler() {
+    props.onFilesSelected([]);
+  }
+
   return (
     <FilePickerContainer>
-      <FileInput id="file-picker" type="file" multiple onChange={(event) => onChangeHandler(event.target.files)} ref={fileInputRef} disabled={sendDisabled} />
+      {!!files.length && <SelectedFilesContainer>
+        <SelectedFilesPopover>
+          <RemoveFiles>
+            <CloseFileIcon onClick={removeFilesHandler} />
+          </RemoveFiles>
+          {files.map((file, index) => <FileName key={index}>{file?.name}</FileName>)}
+        </SelectedFilesPopover>
+      </SelectedFilesContainer>}
+      <FileInput id="file-picker" type="file" multiple onChange={(event) => onChangeHandler(event.target.files)} ref={fileInputRef} disabled={disabled} />
       <label htmlFor="file-picker">
-        <IconButton color="secondary" aria-label="upload file" component="span" disabled={sendDisabled}>
-          <AttachFileIcon />
+        <IconButton color="secondary" aria-label="upload file" component="span" disabled={disabled}>
+          <Badge badgeContent={files.length} color="secondary">
+            <AttachFileIcon />
+          </Badge>
         </IconButton>
       </label>
-      <FileNameContainer>
-        { files.map((file, index) => <FileName key={index}>{file?.name}</FileName>) }
-      </FileNameContainer>
     </FilePickerContainer>
   );
 }
