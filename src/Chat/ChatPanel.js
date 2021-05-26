@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
 import Typography from '@material-ui/core/Typography';
+import Tooltip from '@material-ui/core/Tooltip';
 import SendMessageForm from './SendMessageForm/SendMessageForm';
 import Message from './Message/Message';
 
@@ -151,7 +152,9 @@ export default function ChatPanel(props) {
 
   return (
     <ChatContainer>
-      <CloseIcon onClick={() => props.onClose()} />
+      <Tooltip title="Close Chat">
+        <CloseIcon onClick={() => props.onClose()} />
+      </Tooltip>
       <Typography variant="h4" component="h2">Chat</Typography>
       <MessageList>
         {

@@ -4,6 +4,7 @@ import IconButton from '@material-ui/core/IconButton';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
 import CloseFileIcon from '@material-ui/icons/Close';
 import Badge from '@material-ui/core/Badge';
+import Tooltip from '@material-ui/core/Tooltip';
 
 const FilePickerContainer = styled.div`
   display: inline-block;
@@ -58,19 +59,23 @@ export default function FilePicker(props) {
     <FilePickerContainer>
       {!!files.length && <SelectedFilesContainer>
         <SelectedFilesPopover>
-          <RemoveFiles>
-            <CloseFileIcon onClick={removeFilesHandler} />
-          </RemoveFiles>
+          <Tooltip title="Remove All Files" placement="top">
+            <RemoveFiles>
+              <CloseFileIcon onClick={removeFilesHandler} />
+            </RemoveFiles>
+          </Tooltip>
           {files.map((file, index) => <FileName key={index}>{file?.name}</FileName>)}
         </SelectedFilesPopover>
       </SelectedFilesContainer>}
       <FileInput id="file-picker" type="file" multiple onChange={(event) => onChangeHandler(event.target.files)} ref={fileInputRef} disabled={disabled} />
       <label htmlFor="file-picker">
-        <IconButton color="secondary" aria-label="upload file" component="span" disabled={disabled}>
-          <Badge badgeContent={files.length} color="secondary">
-            <AttachFileIcon />
-          </Badge>
-        </IconButton>
+        <Tooltip title="Select Files">
+          <IconButton color="secondary" aria-label="upload file" component="span" disabled={disabled}>
+            <Badge badgeContent={files.length} color="secondary">
+              <AttachFileIcon />
+            </Badge>
+          </IconButton>
+        </Tooltip>
       </label>
     </FilePickerContainer>
   );

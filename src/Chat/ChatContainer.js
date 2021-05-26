@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import ChatOutlinedIcon from '@material-ui/icons/ChatOutlined';
 import Fab from '@material-ui/core/Fab';
+import Tooltip from '@material-ui/core/Tooltip';
 import Chat from './ChatPanel';
 import { Fragment } from 'react';
 
@@ -26,9 +27,11 @@ export default function ChatContainer(props) {
       </ChatSection>
       {!showChat &&
         <OpenChatButtonSection>
-          <Fab>
-            <ChatOutlinedIcon onClick={() => setShowChat(true)} />
-          </Fab>
+          <Tooltip title="Open Chat">
+            <Fab>
+              <ChatOutlinedIcon onClick={() => setShowChat(true)} />
+            </Fab>
+          </Tooltip>
         </OpenChatButtonSection>
       }
     </Fragment>
