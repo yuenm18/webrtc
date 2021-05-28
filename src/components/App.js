@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import ChatContainer from './Chat/ChatContainer';
-import Video from './Video/Video';
-import * as connection from './connection/webrtc-connection';
+import ChatContainer from './chat/ChatContainer';
+import Video from './video/Video';
+import * as connection from '../connection/webrtc-connection';
 
 const AppContainer = styled.section`
   height: 100vh;

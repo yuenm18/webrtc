@@ -3,10 +3,10 @@ import styled from 'styled-components';
 import CloseOutlinedIcon from '@material-ui/icons/CloseOutlined';
 import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
-import SendMessageForm from './SendMessageForm/SendMessageForm';
-import Message from './Message/Message';
-import * as connection from '../connection/webrtc-connection';
-import * as chatSender from '../connection/chat-sender';
+import SendMessageForm from './SendMessageForm';
+import Message from './Message';
+import * as connection from '../../connection/webrtc-connection';
+import * as chatSender from '../../connection/chat-sender';
 
 const MessageList = styled.div`
   margin-top: 10px;
