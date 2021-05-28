@@ -17,15 +17,23 @@ const FileInput = styled.input`
 const SelectedFilesContainer = styled.div`
   position: relative;
 `;
+
 const SelectedFilesPopover = styled.div`
   position: absolute;
   bottom: 0;
-  margin: 5px;
-  padding: 5px;
   border: 1px solid black;
   border-radius: 10px;
   box-shadow: -2px -2px 8px 2px rgba(0, 0, 0, 0.2);
   background: white;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  max-width: 20vw
+`;
+
+const FileNameContainer = styled.div`
+  margin: 5px;
+  padding: 5px;
 `;
 
 const FileName = styled.small`
@@ -33,14 +41,13 @@ const FileName = styled.small`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  max-width: 100%;
+  max-width: 10vw;
   margin: 5px;
 `;
 
 const RemoveFiles = styled.div`
-  display: flex;
-  justify-content: flex-end;
   cursor: pointer;
+  margin: 5px;
 `;
 
 export default function FilePicker(props) {
@@ -60,12 +67,14 @@ export default function FilePicker(props) {
     <FilePickerContainer>
       {!!files.length && <SelectedFilesContainer>
         <SelectedFilesPopover>
-          <Tooltip title="Remove All Files" placement="top">
-            <RemoveFiles>
+          <FileNameContainer>
+            {files.map((file, index) => <FileName key={index} title={file?.name}>{file?.name}</FileName>)}
+          </FileNameContainer>
+          <RemoveFiles>
+            <Tooltip title="Remove All Files" placement="top">
               <CloseFileIcon onClick={removeFilesHandler} />
-            </RemoveFiles>
-          </Tooltip>
-          {files.map((file, index) => <FileName key={index}>{file?.name}</FileName>)}
+            </Tooltip>
+          </RemoveFiles>
         </SelectedFilesPopover>
       </SelectedFilesContainer>}
       <FileInput id="file-picker" type="file" multiple onChange={(event) => onChangeHandler(event.target.files)} ref={fileInputRef} disabled={disabled} />
