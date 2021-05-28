@@ -20,6 +20,14 @@ const BannerSection = styled.section`
   justify-content: center;
 `;
 
+const CopyLink = styled.a`
+  color: white;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+  bottom: 16px;
+`;
+
 const FullRoomBanner = styled.h1`
   color: red;
 `;
@@ -27,10 +35,12 @@ const FullRoomBanner = styled.h1`
 function App(props) {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [isFull, setIsFull] = useState(false);
 
   useEffect(() => {
     connection.connect(props.roomNumber, setIsFull, setLocalStream, setRemoteStream);
+    connection.registerIsConnectedHandler('CopyLink', setIsConnected);
     return () => connection.disconnect();
   }, [props.roomNumber]);
 
@@ -44,6 +54,7 @@ function App(props) {
           <FullRoomBanner>Room #{props.roomNumber} is full</FullRoomBanner>
         </BannerSection>
       }
+      {!isConnected && <CopyLink target="_blank" rel="noopener noreferrer" href={window.location.href}>Go to this link to join this chat</CopyLink>}
     </AppContainer>
   );
 }

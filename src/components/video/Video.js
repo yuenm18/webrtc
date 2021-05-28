@@ -22,12 +22,6 @@ const LocalStream = styled.video`
   width: 10%
 `;
 
-const CopyLink = styled.a`
-  color: white;
-  position: absolute;
-  bottom: 16px;
-`;
-
 export default function Video(props) {
   const setLocalStream = (video) => {
     if (video) {
@@ -45,7 +39,6 @@ export default function Video(props) {
     <VideoContainer>
       <LocalStream autoPlay playsInline muted={true} ref={setLocalStream}></LocalStream>
       <RemoteStream autoPlay playsInline ref={setRemoteStream}></RemoteStream>
-      {!props.remoteStream && <CopyLink target="_blank" rel="noopener noreferrer" href={window.location.href}>Go to this link to join this chat</CopyLink>}
     </VideoContainer>
   );
 }
