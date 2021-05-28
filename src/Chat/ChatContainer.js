@@ -19,11 +19,11 @@ const OpenChatButtonSection = styled.div`
 
 export default function ChatContainer(props) {
   const [showChat, setShowChat] = useState(true);
-  const { connection } = props;
+
   return (
     <Fragment>
       <ChatSection show={showChat}>
-        <Chat connection={connection} onClose={() => setShowChat(false)} />
+        <Chat onClose={() => setShowChat(false)} />
       </ChatSection>
       {!showChat &&
         <OpenChatButtonSection>

@@ -22,19 +22,19 @@ export default function SendMessageForm(props) {
   const [attachments, setAttachments] = useState([]);
   const disabled = props.disabled;
 
-  const onSubmitHandler = (event) => {
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
 
     let message = {
       id: uuidv4(),
       timestamp: new Date().getTime(),
       message: text,
-      attachments: attachments.map(attachment => ({
+      attachments: await Promise.all(attachments.map(async attachment => ({
         id: uuidv4(),
         name: attachment.name,
         mimeType: attachment.mimeType ?? attachment.type,
-        file: attachment
-      }))
+        fileContent: await attachment.arrayBuffer()
+      })))
     };
 
     setText('');

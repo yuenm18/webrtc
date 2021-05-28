@@ -36,7 +36,7 @@ export default function Message(props) {
 
       <AttachmentContainer>
       {
-        message.attachments.map(attachment => <Attachment attachment={attachment} />)
+        message.attachments.map(attachment => <Attachment key={attachment.id} attachment={attachment} />)
       }
       </AttachmentContainer>
       <DateDisplay>{new Date(message.timestamp).toLocaleString()}</DateDisplay>
