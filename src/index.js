@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
+import adapter from 'webrtc-adapter';
 
+console.log(adapter.browserDetails.browser);
 
 const roomNumber = new URLSearchParams(window.location.search).get("room");
 if (roomNumber == null) {
